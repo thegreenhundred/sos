@@ -1,24 +1,35 @@
 language: python
 python:
-  - 2.7
-  - 3.4
-  - 3.5
-  - "nightly"
+- 2.7
+- 3.4
+- 3.5
+- nightly
 matrix:
   allow_failures:
-    - python: 3.5
-    - python: "nightly"
-sudo: false
+  - python: 3.5
+  - python: nightly
+sudo: required
 notifications:
-  email:
-    sos-devel@redhat.com
+  email: sos-devel@redhat.com
   irc:
     channels:
-      - "us.freenode.net#sosreport"
+    - us.freenode.net#sosreport
     on_success: change
 install:
-  - "pip install six nose nose-cov pep8"
-  - "python setup.py install"
+- pip install six nose nose-cov pep8
+- python setup.py install
 script:
-  - "pep8 sos"
-  - "nosetests -v --with-cover --cover-package=sos --cover-html"
+- pep8 sos
+- nosetests -v --with-cover --cover-package=sos --cover-html
+after_success:
+- openssl aes-256-cbc -K $encrypted_80980243e8b7_key -iv $encrypted_80980243e8b7_iv
+  -in .snapcraft/travis_snapcraft.cfg -out .snapcraft/snapcraft.cfg -d
+services:
+- docker
+deploy:
+  'on':
+    branch: master
+  provider: script
+  script: docker run -v $(pwd):$(pwd) -t snapcore/snapcraft sh -c "apt update -qq
+    && cd $(pwd) && snapcraft && snapcraft push *.snap --release edge"
+  skip_cleanup: true
